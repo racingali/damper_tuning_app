@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>DAMPER//TUNE</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#000;--s1:#0a0a0a;--s2:#111;--s3:#181818;
+  --border:#1e1e1e;--border2:#2a2a2a;
+  --G:#39ff14;--R:#ff2d55;--B:#00aaff;--Y:#ffd600;--P:#bf5fff;--O:#ff6a00;
+  --muted:#555;--dim:#2a2a2a;
+  --mono:'Space Mono',monospace;
+}
+html,body{height:100%;background:#000;color:#fff;font-family:var(--mono);font-size:14px;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto}
+
+/* Chat */
+
+/* HEADER */
+.hdr{padding:11px 15px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--G)}
+.logo em{color:var(--dim);font-style:normal}
+.hdr-r{display:flex;align-items:center;gap:9px}
+.mode-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:2px;letter-spacing:.1em;border:1px solid var(--G);color:var(--G);background:rgba(57,255,20,.06)}
+.tier-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:2px;letter-spacing:.08em}
+.tp-0{color:var(--muted);border:1px solid var(--border)}
+.tp-1{color:var(--Y);border:1px solid var(--Y);background:rgba(255,214,0,.06)}
+.tp-2{color:var(--G);border:1px solid var(--G);background:rgba(57,255,20,.06)}
+
+/* NAV */
+.nav{display:flex;border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0}
+.nb{flex:1;padding:11px 0 9px;font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.nb.on{color:var(--G);border-bottom-color:var(--G)}
+
+/* PAGES */
+.pages{flex:1;overflow:hidden;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:13px 13px 34px;display:none;-webkit-overflow-scrolling:touch}
+.page.on{display:block}
+#page-chat{padding:0;display:none;flex-direction:column;overflow:hidden}
+#page-chat.on{display:flex}
+
+/* TYPE */
+.sec{font-size:8px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin:15px 0 8px;border-left:2px solid var(--G);padding-left:8px}
+.sec:first-child{margin-top:0}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:11px;margin-bottom:9px}
+
+/* SENSOR TILES */
+.sensor-grid{display:grid;gap:5px;margin-bottom:9px}
+.sg-2{grid-template-columns:1fr 1fr}
+.sg-3{grid-template-columns:1fr 1fr 1fr}
+.sg-5{grid-template-columns:1fr 1fr}
+.stile{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:9px 10px;position:relative;transition:border-color .3s}
+.stile::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--sc,#333);transition:background .3s}
+.stile.live{border-color:color-mix(in srgb,var(--sc) 40%,transparent)}
+.stile.offline{opacity:.35}
+.stile.offline::before{background:var(--muted)}
+.st-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.st-role{font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--sc,var(--muted))}
+.st-status{font-size:8px;font-weight:700;letter-spacing:.06em;padding:1px 5px;border-radius:2px}
+.ss-live{color:var(--G);background:rgba(57,255,20,.1)}
+.ss-weak{color:var(--Y);background:rgba(255,214,0,.1)}
+.ss-offline{color:var(--muted);background:rgba(255,255,255,.05)}
+.ss-sim{color:var(--B);background:rgba(0,170,255,.1)}
+.st-val{font-size:22px;font-weight:700;color:var(--sc,#fff);line-height:1}
+.st-unit{font-size:9px;color:var(--muted);margin-top:2px}
+.cg-wide{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:9px 11px;margin-bottom:9px;position:relative}
+.cg-wide::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--P)}
+.cg-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.cg-role{font-size:9px;font-weight:700;letter-spacing:.12em;color:var(--P)}
+.cg-vals{display:flex;gap:18px}
+.cg-col{text-align:center}
+.cg-v{font-size:15px;font-weight:700;color:var(--P)}
+.cg-l{font-size:8px;color:var(--muted);margin-top:2px}
+
+/* CHARTS */
+.cw{width:100%;position:relative}
+.cw canvas{width:100%!important}
+.h140{height:140px}.h110{height:110px}.h90{height:90px}
+.leg{display:flex;flex-wrap:wrap;gap:9px;margin-top:6px}
+.li{display:flex;align-items:center;gap:4px;font-size:8px;color:var(--muted)}
+.ld{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.ll{width:13px;height:2px;flex-shrink:0}
+
+/* SESSION BAR */
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--s1);border:1px solid var(--border);border-radius:4px;margin-bottom:9px}
+.sbar-st{font-size:9px;color:var(--muted);letter-spacing:.06em}
+.sbar-time{font-size:20px;font-weight:700}
+.sbar-smp{font-size:9px;color:var(--muted)}
+
+/* BUTTONS */
+.btn{width:100%;padding:13px;border-radius:4px;border:none;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;cursor:pointer;margin-bottom:7px;transition:opacity .15s}
+.btn:last-child{margin-bottom:0}
+.btn-go{background:var(--G);color:#000}
+.btn-go.recording{background:var(--R);color:#fff}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:#fff;border-color:#444}
+
+/* CAPABILITY PANEL */
+.cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
+.cap-item{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:8px 10px;display:flex;align-items:center;gap:8px}
+.cap-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.cap-ok{background:var(--G)}
+.cap-no{background:var(--dim)}
+.cap-warn{background:var(--Y)}
+.cap-txt{font-size:10px;color:var(--muted)}
+.cap-txt.ok{color:#fff}
+
+/* ANALYSIS */
+.axle-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:9px}
+.ac{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:10px;position:relative}
+.ac::after{content:attr(data-ax);position:absolute;top:8px;right:9px;font-size:8px;font-weight:700;letter-spacing:.1em;color:var(--dim)}
+.ac-lbl{font-size:8px;color:var(--muted);margin-bottom:4px;letter-spacing:.06em}
+.ac-val{font-size:22px;font-weight:700;line-height:1}
+.ac-sub{font-size:9px;color:var(--muted);margin-top:2px}
+.badge{display:inline-flex;padding:3px 8px;border-radius:2px;font-size:8px;font-weight:700;margin-top:5px;letter-spacing:.06em}
+.b-ok{border:1px solid var(--G);color:var(--G);background:rgba(57,255,20,.07)}
+.b-warn{border:1px solid var(--Y);color:var(--Y);background:rgba(255,214,0,.07)}
+.b-bad{border:1px solid var(--R);color:var(--R);background:rgba(255,45,85,.07)}
+.b-info{border:1px solid var(--muted);color:var(--muted)}
+.b-na{border:1px solid var(--dim);color:var(--dim)}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border2)}
+.dr:last-child{border:none}
+.dr-l{font-size:10px;color:var(--muted)}
+.dr-v{font-size:12px;font-weight:700}
+.dg{color:var(--G)}.dy{color:var(--Y)}.dr2{color:var(--R)}.dm{color:var(--muted)}
+.dt{width:100%;border-collapse:collapse}
+.dt th{font-size:8px;letter-spacing:.1em;color:var(--muted);padding:4px 5px;text-align:left;border-bottom:1px solid var(--border);font-weight:700}
+.dt td{padding:5px 5px;border-bottom:1px solid var(--border2);vertical-align:middle}
+.dt tr:last-child td{border:none}
+.zw{display:flex;align-items:center;gap:5px}
+.zt{height:4px;width:44px;background:var(--s3);border-radius:2px;overflow:hidden;flex-shrink:0}
+.zf{height:100%;border-radius:2px;transition:width .5s}
+.zn{font-size:9px;font-weight:700;min-width:28px}
+.na-overlay{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);border-radius:3px;font-size:9px;color:var(--muted);letter-spacing:.08em;padding:8px}
+.fvtabs{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.fvt{padding:4px 10px;border-radius:3px;border:1px solid var(--border);background:transparent;font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;color:var(--muted);letter-spacing:.06em;transition:all .15s}
+.fvt.on{border-color:var(--sc,var(--G));color:var(--sc,var(--G));background:rgba(57,255,20,.06)}
+.diag-row{padding:7px 0;border-bottom:1px solid var(--border2)}
+.diag-row:last-child{border:none}
+
+/* SETUP MODAL */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.mbox{background:#0a0a0a;border:1px solid var(--border);border-radius:8px 8px 0 0;padding:16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+.mhdr{font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--G);display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+.xbtn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;font-family:var(--mono)}
+.fg{margin-bottom:9px}
+.fl2{font-size:8px;font-weight:700;letter-spacing:.1em;color:var(--muted);margin-bottom:3px;display:block}
+.fi{width:100%;padding:8px 9px;background:#111;border:1px solid var(--border);border-radius:3px;color:#fff;font-family:var(--mono);font-size:12px;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--G)}
+select.fi option{background:#111}
+.fr2{display:flex;gap:7px}.fr2 .fg{flex:1;margin-bottom:0}
+.cw4{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sbox{border-radius:4px;padding:10px;margin-bottom:9px}
+.sg-green{background:rgba(57,255,20,.03);border:1px solid rgba(57,255,20,.15)}
+.sg-blue{background:rgba(0,170,255,.03);border:1px solid rgba(0,170,255,.15)}
+.sg-purple{background:rgba(191,95,255,.03);border:1px solid rgba(191,95,255,.15)}
+.sg-yellow{background:rgba(255,214,0,.03);border:1px solid rgba(255,214,0,.15)}
+.sbt{font-size:8px;font-weight:700;letter-spacing:.12em;margin-bottom:8px}
+.t-g{color:var(--G)}.t-b{color:var(--B)}.t-p{color:var(--P)}.t-y{color:var(--Y)}
+.div{height:1px;background:var(--border);margin:11px 0}
+.prev-block{display:none;margin-top:9px;padding-top:9px;border-top:1px solid var(--border2)}
+
+/* MODE SELECTOR */
+.mode-sel{display:flex;gap:6px;margin-bottom:11px}
+.mode-btn{flex:1;padding:9px 4px;border-radius:4px;border:1px solid var(--border);background:transparent;font-family:var(--mono);font-size:9px;font-weight:700;cursor:pointer;color:var(--muted);letter-spacing:.06em;transition:all .15s;text-align:center}
+.mode-btn.on{border-color:var(--G);color:var(--G);background:rgba(57,255,20,.07)}
+.mode-icon{font-size:16px;display:block;margin-bottom:3px}
+
+/* SENSOR IP PANEL */
+.ip-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.ip-role-badge{font-size:9px;font-weight:700;padding:3px 8px;border-radius:2px;width:52px;text-align:center;flex-shrink:0}
+.ip-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ip-input{flex:1;padding:6px 8px;background:#111;border:1px solid var(--border);border-radius:3px;color:#fff;font-family:var(--mono);font-size:11px;outline:none}
+.ip-input:focus{border-color:var(--G)}
+.ip-input::placeholder{color:var(--dim)}
+.ip-sim-badge{font-size:8px;color:var(--B);border:1px solid var(--B);padding:2px 6px;border-radius:2px;flex-shrink:0;letter-spacing:.04em}
+
+/* CHAT */
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;min-height:0;-webkit-overflow-scrolling:touch}
+.msg{max-width:90%}
+.msg-ai{align-self:flex-start}.msg-user{align-self:flex-end}
+.mb{padding:9px 12px;font-size:12px;line-height:1.6;border-radius:5px}
+.msg-ai .mb{background:var(--s2);border:1px solid var(--border);border-radius:3px 5px 5px 5px}
+.msg-user .mb{background:rgba(57,255,20,.09);border:1px solid rgba(57,255,20,.18);color:var(--G);border-radius:5px 3px 5px 5px}
+.mm{font-size:8px;color:var(--dim);margin-top:3px;letter-spacing:.04em}
+.msg-ai .mm{text-align:left}.msg-user .mm{text-align:right}
+.chat-foot{flex-shrink:0;border-top:1px solid var(--border);background:#000}
+.chips{display:flex;gap:5px;overflow-x:auto;padding:7px 12px 0;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:4px 10px;font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:var(--mono);transition:all .15s}
+.chip:hover{border-color:var(--G);color:var(--G)}
+.chat-row{display:flex;gap:7px;align-items:flex-end;padding:8px 12px 11px}
+.chat-ta{flex:1;background:var(--s1);border:1px solid var(--border);border-radius:4px;color:#fff;font-family:var(--mono);font-size:12px;padding:7px 10px;outline:none;resize:none;min-height:36px;max-height:96px;transition:border-color .2s;line-height:1.4}
+.chat-ta:focus{border-color:var(--G)}
+.csend{width:36px;height:36px;flex-shrink:0;background:var(--G);border:none;border-radius:4px;cursor:pointer;font-size:15px;color:#000;font-weight:700;font-family:var(--mono)}
+.csend:disabled{opacity:.25;cursor:not-allowed}
+.td{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--muted);animation:tdot 1.1s infinite both}
+.td:nth-child(2){animation-delay:.18s}.td:nth-child(3){animation-delay:.36s}
+@keyframes tdot{0%,70%,100%{opacity:.2}35%{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sd-live{background:var(--G);box-shadow:0 0 7px var(--G)}
+.sd-rec{background:var(--R);animation:pulse .8s infinite}
+.calib{font-size:9px;color:var(--Y);animation:pulse .8s infinite;letter-spacing:.06em}
+.empty{text-align:center;padding:22px 0;font-size:9px;color:var(--dim);line-height:2;letter-spacing:.06em}
+.warn{background:rgba(255,214,0,.06);border-left:2px solid var(--Y);padding:7px 9px;font-size:9px;color:var(--Y);border-radius:0 3px 3px 0;margin-bottom:9px;line-height:1.6;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="logo">DAMPER<em>//</em>TUNE</div>
+  <div class="hdr-r">
+    <span class="mode-pill" id="mode-pill">4W</span>
+    <span class="tier-pill tp-0" id="tier-pill">NO SETUP</span>
+    <div class="sdot sd-live" id="sdot"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nb on" onclick="showPage('live',this)">LIVE</button>
+  <button class="nb" onclick="showPage('analysis',this)">ANALYSIS</button>
+  <button class="nb" onclick="showPage('chat',this)">AI CHAT</button>
+</nav>
+
+<div class="pages">
+
+<!-- ══ LIVE ══ -->
+<div class="page on" id="page-live">
+  <div class="sec">sensor status</div>
+  <div id="sensor-tiles"></div>
+  <div id="cg-tile-wrap"></div>
+
+  <div class="sec">waveform</div>
+  <div class="card" style="padding:9px">
+    <div class="cw h140"><canvas id="liveChart" role="img" aria-label="Live IMU waveform all channels"></canvas></div>
+    <div class="leg" id="live-legend"></div>
+  </div>
+
+  <div class="sbar">
+    <span class="sbar-st" id="sess-st">IDLE</span>
+    <span class="sbar-time" id="sess-time">00:00</span>
+    <span class="sbar-smp" id="sess-smp">0 SMP</span>
+  </div>
+  <button class="btn btn-go" id="rec-btn" onclick="toggleRec()">● START SESSION</button>
+  <button class="btn btn-ghost" onclick="openSetup()">⚙ SETUP</button>
+</div>
+
+<!-- ══ ANALYSIS ══ -->
+<div class="page" id="page-analysis">
+  <div class="sec">available analysis</div>
+  <div class="cap-grid" id="cap-grid"></div>
+
+  <div id="no-data-warn" class="warn" style="display:none">NO SESSION DATA — RECORD A SESSION FIRST.</div>
+
+  <div id="freq-section">
+    <div class="sec">natural frequency — sprung</div>
+    <div class="axle-grid" id="freq-axle-grid"></div>
+    <div class="sec">natural frequency — wheel hop</div>
+    <div class="axle-grid" id="hop-axle-grid"></div>
+  </div>
+
+  <div id="spring-section">
+    <div class="sec">spring assessment</div>
+    <div class="card" id="spring-card">
+      <div class="dr"><span class="dr-l">front / primary wheel rate</span><span class="dr-v dg" id="sa-fwr">—</span></div>
+      <div class="dr"><span class="dr-l">rear wheel rate</span><span class="dr-v dg" id="sa-rwr">—</span></div>
+      <div class="dr"><span class="dr-l">freq ratio (front/rear)</span><span class="dr-v" id="sa-ratio">—</span></div>
+      <div class="dr"><span class="dr-l">balance tendency</span><span class="dr-v" id="sa-bal">—</span></div>
+      <div class="dr"><span class="dr-l">front / primary spring</span><span class="dr-v" id="sa-fsp">—</span></div>
+      <div class="dr"><span class="dr-l">rear spring</span><span class="dr-v" id="sa-rsp">—</span></div>
+    </div>
+  </div>
+
+  <div id="damp-section">
+    <div class="sec">damping ratios ζ</div>
+    <div class="card" style="padding:8px">
+      <table class="dt" role="table" aria-label="Damping ratios per sensor channel and velocity regime">
+        <thead><tr><th>SENSOR</th><th>LS COMP</th><th>HS COMP</th><th>LS RBD</th><th>HS RBD</th></tr></thead>
+        <tbody id="damp-tbody"></tbody>
+      </table>
+    </div>
+    <div class="sec">critical damping ref</div>
+    <div class="card" id="cc-card"></div>
+  </div>
+
+  <div id="disp-section">
+    <div class="sec">suspension displacement — relative to CG</div>
+    <div class="card" style="padding:9px">
+      <div class="cw h110"><canvas id="dispChart" role="img" aria-label="Suspension displacement per channel"></canvas></div>
+      <div class="leg" id="disp-legend"></div>
+    </div>
+  </div>
+
+  <div id="fv-section">
+    <div class="sec">force-velocity curve</div>
+    <div class="fvtabs" id="fv-tabs"></div>
+    <div class="card" style="padding:9px">
+      <div class="cw h110"><canvas id="fvChart" role="img" aria-label="Force-velocity curve selected channel"></canvas></div>
+      <div style="display:flex;justify-content:space-between;margin-top:7px;font-size:8px;color:var(--muted);letter-spacing:.06em">
+        <span>← COMPRESSION</span><span id="fv-lbl" style="color:var(--G);font-weight:700">—</span><span>REBOUND →</span>
+      </div>
+    </div>
+    <div class="card" id="fv-slopes">
+      <div class="dr"><span class="dr-l">LS compression slope</span><span class="dr-v" id="fv-lsc">—</span></div>
+      <div class="dr"><span class="dr-l">HS compression slope</span><span class="dr-v" id="fv-hsc">—</span></div>
+      <div class="dr"><span class="dr-l">LS rebound slope</span><span class="dr-v" id="fv-lsr">—</span></div>
+      <div class="dr"><span class="dr-l">HS rebound slope</span><span class="dr-v" id="fv-hsr">—</span></div>
+      <div class="dr"><span class="dr-l">LS/HS knee</span><span class="dr-v" id="fv-knee">—</span></div>
+    </div>
+  </div>
+
+  <div id="diag-section">
+    <div class="sec">diagnosis</div>
+    <div class="card" id="diag-card"><div class="empty">RECORD A SESSION</div></div>
+  </div>
+</div>
+
+<!-- ══ AI CHAT ══ -->
+<div class="page" id="page-chat">
+  <div class="chat-msgs" id="chat-msgs">
+    <div class="msg msg-ai">
+      <div class="mb">Suspension engineer mode. Setup and session data loaded. Ask about frequencies, damping, F-V curves, or "give me tuning recommendations".</div>
+      <div class="mm">DAMPER TUNE AI</div>
+    </div>
+  </div>
+  <div class="chat-foot">
+    <div class="chips">
+      <span class="chip" onclick="sendChip(this)">Tuning recommendations</span>
+      <span class="chip" onclick="sendChip(this)">Is primary spring correct?</span>
+      <span class="chip" onclick="sendChip(this)">Interpret F-V curves</span>
+      <span class="chip" onclick="sendChip(this)">Front/rear balance</span>
+      <span class="chip" onclick="sendChip(this)">Wheel hop diagnosis</span>
+    </div>
+    <div class="chat-row">
+      <textarea class="chat-ta" id="chat-input" placeholder="Ask about your suspension data..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+        oninput="this.style.height='36px';this.style.height=Math.min(this.scrollHeight,96)+'px'"></textarea>
+      <button class="csend" id="chat-send" onclick="sendChat()">↑</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /pages -->
+</div><!-- /app -->
+
+<!-- ══ SETUP MODAL ══ -->
+<div class="modal" id="setup-modal" style="display:none">
+<div class="mbox">
+  <div class="mhdr">SETUP <button class="xbtn" onclick="closeSetup()">×</button></div>
+
+  <!-- MODE SELECT -->
+  <div class="sbox sg-green" style="padding:11px;margin-bottom:10px">
+    <div class="sbt t-g">VEHICLE MODE</div>
+    <div class="mode-sel">
+      <button class="mode-btn on" id="mb-4w" onclick="setMode('4W',this)"><span class="mode-icon">🚗</span>4-WHEEL</button>
+      <button class="mode-btn" id="mb-2w" onclick="setMode('2W',this)"><span class="mode-icon">🏍</span>2-WHEEL</button>
+    </div>
+  </div>
+
+  <!-- SENSOR IPs -->
+  <div class="sbox sg-yellow">
+    <div class="sbt t-y">SENSOR IP ADDRESSES</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:9px;line-height:1.6">Leave blank = simulated data. Enter EVB IP once connected to sensor AP network (e.g. 192.168.4.1). Each sensor creates its own AP — use USB WiFi adapters for multiple sensors.</div>
+    <div id="ip-rows"></div>
+    <div class="fg" style="margin-top:8px">
+      <label class="fl2">EVB API endpoint path (once known)</label>
+      <input class="fi" id="s-endpoint" placeholder="/data  or  /api/imu  etc." style="font-size:11px"/>
+    </div>
+    <div class="fg">
+      <label class="fl2">IMU sample rate Hz</label>
+      <select class="fi" id="s-hz">
+        <option value="100">100 Hz</option>
+        <option value="200">200 Hz</option>
+        <option value="500" selected>500 Hz</option>
+        <option value="1000">1000 Hz</option>
+        <option value="2000">2000 Hz</option>
+        <option value="6600">6600 Hz (max)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- PHYSICS INPUTS -->
+  <div class="sbox sg-green">
+    <div class="sbt t-g">CORNER WEIGHTS — kg, with rider + fuel</div>
+    <div class="cw4" id="cw-inputs"></div>
+    <div class="prev-block" id="wt-prev">
+      <div class="dr"><span class="dr-l">total</span><span class="dr-v dg" id="p-tot">—</span></div>
+      <div class="dr"><span class="dr-l">front %</span><span class="dr-v" id="p-fp">—</span></div>
+    </div>
+  </div>
+
+  <div class="sbox sg-green">
+    <div class="sbt t-g">SPRINGS &amp; MOTION RATIOS</div>
+    <div id="spring-inputs"></div>
+    <div class="fg" style="margin-top:7px"><label class="fl2">unsprung mass / corner kg (default 18 car, 6 bike)</label><input class="fi" id="s-uns" placeholder="e.g. 18"/></div>
+    <div class="prev-block" id="sp-prev">
+      <div class="dr"><span class="dr-l">front wheel rate</span><span class="dr-v dg" id="p-fwr">—</span></div>
+      <div class="dr"><span class="dr-l">rear wheel rate</span><span class="dr-v dg" id="p-rwr">—</span></div>
+      <div class="dr"><span class="dr-l">front ωn est.</span><span class="dr-v" id="p-ffn">—</span></div>
+      <div class="dr"><span class="dr-l">rear ωn est.</span><span class="dr-v" id="p-rfn">—</span></div>
+    </div>
+  </div>
+
+  <div class="sbox sg-blue">
+    <div class="sbt t-b">VEHICLE NAME &amp; NOTES</div>
+    <input class="fi" id="s-name" placeholder="e.g. YZ450F 2024 / Trek Slash / WRX STI"/>
+  </div>
+
+  <div class="sbox sg-blue">
+    <div class="sbt t-b">ANTHROPIC API KEY</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:7px;line-height:1.6">Stored in browser only. Required for AI chat.</div>
+    <input class="fi" id="s-key" type="password" placeholder="sk-ant-..."/>
+  </div>
+
+  <button class="btn btn-go" onclick="saveSetup()" style="margin-top:4px">SAVE</button>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+'use strict';
+// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+const G=9810, TP=2*Math.PI, LN=120, SK='dts6', AK='dts6k';
+
+// Physics targets per mode
+const TARGETS = {
+  '4W': { bodyFreq:[1.0,2.5], hopFreq:[10,15], lsHsWhl:2540, unsprungDef:18 },
+  '2W': { bodyFreq:[1.5,3.5], hopFreq:[12,20], lsHsWhl:1270, unsprungDef:6  },
+};
+
+// Sensor roles per mode — ordered [primary front, secondary/rear, ..., CG last]
+const ROLES = {
+  '4W': ['FL','FR','RL','RR','CG'],
+  '2W': ['FORK','REAR','CG'],
+};
+const ROLE_COLORS = {
+  FL:'#39ff14', FR:'#00aaff', RL:'#ffd600', RR:'#ff2d55',
+  FORK:'#39ff14', REAR:'#ff6a00', CG:'#bf5fff'
+};
+const IS_CG = r => r === 'CG';
+const IS_FRONT = r => r==='FL'||r==='FORK';
+const IS_REAR  = r => r==='RL'||r==='REAR';
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let mode = '4W';
+let cfg = { name:'', hz:500, endpoint:'/data', uns:'', sf:'', sr:'', mrf:'', mrr:'',
+  cfl:'', cfr:'', crl:'', crr:'',   // 4W corner weights
+  cfork:'', crear:'',                // 2W weights
+  ips: {} };                         // role -> IP string
+
+// Sensor channel state — one entry per role
+let channels = {}; // role -> { status:'sim'|'live'|'weak'|'offline', val:number, lastSeen:number, watchdog, simState }
+let recording = false, calibrating = false, sessionStart = null, timerInt = null;
+let smp = {};        // role -> Float32Array (built at session end from ringbuf)
+let smpBufs = {};    // role -> [] during recording
+let sdata = null;
+let fvRole = null;
+let chatHist = [];
+
+const apiKey = () => localStorage.getItem(AK)||'';
+
+// ─── PHYSICS HELPERS ─────────────────────────────────────────────────────────
+const T = () => TARGETS[mode];
+const roles = () => ROLES[mode];
+const cornerRoles = () => roles().filter(r=>!IS_CG(r));
+const hasCG = () => channels['CG'] && channels['CG'].status !== 'offline';
+
+function getWeight(role){
+  const map = { FL:cfg.cfl, FR:cfg.cfr, RL:cfg.crl, RR:cfg.crr, FORK:cfg.cfork, REAR:cfg.crear };
+  const v = parseFloat(map[role]); return isNaN(v)||v<=0?null:v;
+}
+function getMR(role){
+  const v = parseFloat(IS_FRONT(role)?cfg.mrf:cfg.mrr); return isNaN(v)||v<=0?null:v;
+}
+function getSpring(role){
+  const v = parseFloat(IS_FRONT(role)||role==='FORK'?cfg.sf:cfg.sr); return isNaN(v)||v<=0?null:v;
+}
+function getUns(){ return parseFloat(cfg.uns)||(mode==='4W'?18:6); }
+function getSprungMass(role){ const w=getWeight(role); return w?Math.max(1,w-getUns()):null; }
+function getWheelRate(role){ const k=getSpring(role),m=getMR(role); return k&&m?k*m*m:null; }
+function getNatFreq(role){ const kw=getWheelRate(role),ms=getSprungMass(role); return kw&&ms?Math.sqrt(kw*1000/ms)/TP:null; }
+function getCritDamp(role){ const kw=getWheelRate(role),ms=getSprungMass(role); return kw&&ms?2*Math.sqrt(kw*1000*ms):null; }
+function hasMR(){ return getMR('FL')!==null||getMR('FORK')!==null; }
+function hasCW(){ return cornerRoles().some(r=>getWeight(r)!==null); }
+function tier(){ return !hasMR()?0:!hasCW()?1:2; }
+
+// ─── INTEGRATION ─────────────────────────────────────────────────────────────
+function intV(arr,dt){ const v=new Float32Array(arr.length);let vel=0;for(let i=0;i<arr.length;i++){vel=vel*.97+arr[i]*G*dt;v[i]=vel;}return v; }
+function intD(arr,dt){ const v=intV(arr,dt);const d=new Float32Array(arr.length);let dis=0;for(let i=0;i<arr.length;i++){dis=dis*.99+v[i]*dt;d[i]=dis;}const m=d.reduce((a,b)=>a+b)/d.length;return d.map(x=>x-m); }
+
+// ─── FFT ─────────────────────────────────────────────────────────────────────
+function fft(sig){ const n=sig.length,re=new Float32Array(n),im=new Float32Array(n);for(let i=0;i<n;i++)re[i]=sig[i];let j=0;for(let i=1;i<n;i++){let b=n>>1;for(;j&b;b>>=1)j^=b;j^=b;if(i<j){[re[i],re[j]]=[re[j],re[i]];[im[i],im[j]]=[im[j],im[i]];}}for(let l=2;l<=n;l<<=1){const a=-TP/l,wR=Math.cos(a),wI=Math.sin(a);for(let i=0;i<n;i+=l){let uR=1,uI=0;for(let k=0;k<l/2;k++){const eR=re[i+k+l/2]*uR-im[i+k+l/2]*uI,eI=re[i+k+l/2]*uI+im[i+k+l/2]*uR;re[i+k+l/2]=re[i+k]-eR;im[i+k+l/2]=im[i+k]-eI;re[i+k]+=eR;im[i+k]+=eI;const nr=uR*wR-uI*wI;uI=uR*wI+uI*wR;uR=nr;}}}const mag=new Float32Array(n/2);for(let i=0;i<n/2;i++)mag[i]=Math.sqrt(re[i]**2+im[i]**2);return mag; }
+function p2(n){ let p=1;while(p<n)p<<=1;return p; }
+function domF(sig,sr,lo,hi){ const n=p2(Math.min(sig.length,8192));const w=new Float32Array(n);for(let i=0;i<n;i++)w[i]=(i<sig.length?sig[i]:0)*.5*(1-Math.cos(TP*i/(n-1)));const mag=fft(w),df=sr/n;let bm=0,bf=0;for(let i=1;i<mag.length;i++){const f=i*df;if(f<lo||f>hi)continue;if(mag[i]>bm){bm=mag[i];bf=f;}}return bf||null; }
+
+// ─── ZETA ─────────────────────────────────────────────────────────────────────
+function zetaLD(arr){ if(!arr||arr.length<20)return null;let pi=0;for(let i=1;i<arr.length;i++)if(Math.abs(arr[i])>Math.abs(arr[pi]))pi=i;const aft=Array.from(arr.slice(pi,Math.min(pi+300,arr.length)));const pks=[];for(let i=1;i<aft.length-1;i++)if(Math.abs(aft[i])>Math.abs(aft[i-1])&&Math.abs(aft[i])>Math.abs(aft[i+1])&&Math.abs(aft[i])>.02)pks.push(Math.abs(aft[i]));if(pks.length<2)return null;const d=Math.log(pks[0]/pks[Math.min(1,pks.length-1)]);const z=d/Math.sqrt(4*Math.PI**2+d**2);return Math.max(.05,Math.min(1.5,z)); }
+
+// ─── F-V EXTRACTION ──────────────────────────────────────────────────────────
+function extFV(cAcc,cgAcc,ms,mrV,dt){ const n=cAcc.length,lshs=T().lsHsWhl;const rel=new Float32Array(n);for(let i=0;i<n;i++)rel[i]=cAcc[i]-(cgAcc&&cgAcc[i]||0);const relV=intV(rel,dt);const wV=mrV?relV.map(v=>v/mrV):relV;const F=new Float32Array(n);for(let i=0;i<n;i++)F[i]=(ms||50)*(cgAcc&&cgAcc[i]||0)*G/1000;const pts=[];const step=Math.max(1,~~(n/500));for(let i=0;i<n;i+=step){const v=wV[i]/1000;if(Math.abs(v)<.003)continue;pts.push({x:v,y:F[i]});}pts.sort((a,b)=>a.x-b.x);function lr(p){if(!p||p.length<4)return null;const xs=p.map(q=>q.x),ys=p.map(q=>q.y),n=xs.length,mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;const num=xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0),den=xs.reduce((s,x)=>s+(x-mx)**2,0);return den>0?num/den:null;}const k=lshs/1000;return{pts,k,lsc:lr(pts.filter(p=>p.x<0&&Math.abs(p.x)<k)),hsc:lr(pts.filter(p=>p.x<0&&Math.abs(p.x)>=k)),lsr:lr(pts.filter(p=>p.x>0&&p.x<k)),hsr:lr(pts.filter(p=>p.x>0&&p.x>=k))}; }
+
+// ─── SIMULATOR ───────────────────────────────────────────────────────────────
+// Per-role simulation state
+const SIM_PROFILES = {
+  FL:{amp:.25,freq:2.1,hopF:12,bumpP:.025},
+  FR:{amp:.25,freq:2.1,hopF:11,bumpP:.025},
+  RL:{amp:.20,freq:2.3,hopF:13,bumpP:.02},
+  RR:{amp:.20,freq:2.3,hopF:12.5,bumpP:.02},
+  FORK:{amp:.35,freq:3.5,hopF:18,bumpP:.03},
+  REAR:{amp:.28,freq:4.0,hopF:22,bumpP:.025},
+  CG:{amp:.06,freq:1.8,hopF:0,bumpP:0}
+};
+function initSimStates(){
+  roles().forEach(r=>{ channels[r]={status:'sim',val:0,lastSeen:Date.now(),simV:0,simT:0}; });
+}
+function simTick(r,dt){
+  const p=SIM_PROFILES[r]||SIM_PROFILES.FL;
+  const ch=channels[r];
+  ch.simT=(ch.simT||0)+dt;
+  const road=Math.sin(ch.simT*p.freq)*(p.amp*.8)+Math.sin(ch.simT*(p.freq*3))*(p.amp*.3);
+  const bump=Math.random()<p.bumpP?(Math.random()-.5)*p.amp*6:0;
+  ch.simV=(ch.simV||0)*.82+(Math.random()-.5)*(p.amp*.4)+road+bump;
+  if(IS_CG(r))ch.simV*=.4;
+  ch.val=ch.simV;
+  return ch.val;
+}
+
+// ─── LIVE CHART SETUP ────────────────────────────────────────────────────────
+let liveBufs={};
+let liveChart=null, dispChart=null, fvChart=null;
+const LBLS=Array(LN).fill('');
+
+function buildLiveChart(){
+  if(liveChart)liveChart.destroy();
+  liveBufs={};
+  const datasets=[];
+  roles().forEach(r=>{
+    liveBufs[r]=Array(LN).fill(0);
+    datasets.push({data:[...liveBufs[r]],borderColor:ROLE_COLORS[r],borderWidth:IS_CG(r)?1:1.5,borderDash:IS_CG(r)?[4,3]:[],pointRadius:0,tension:.3});
+  });
+  liveChart=new Chart(document.getElementById('liveChart').getContext('2d'),{type:'line',data:{labels:LBLS,datasets},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:true,ticks:{color:'#444',font:{size:8,family:'Space Mono'},maxTicksLimit:4},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}});
+}
+function buildAnalysisCharts(){
+  if(dispChart)dispChart.destroy();if(fvChart)fvChart.destroy();
+  const cRoles=cornerRoles();
+  dispChart=new Chart(document.getElementById('dispChart').getContext('2d'),{type:'line',data:{labels:[],datasets:cRoles.map(r=>({data:[],borderColor:ROLE_COLORS[r],borderWidth:1.5,pointRadius:0,tension:.3}))},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:true,title:{display:true,text:'mm',color:'#444',font:{size:8}},ticks:{color:'#444',font:{size:8,family:'Space Mono'},maxTicksLimit:4},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}});
+  fvChart=new Chart(document.getElementById('fvChart').getContext('2d'),{type:'scatter',data:{datasets:[{data:[],borderColor:ROLE_COLORS[cRoles[0]||'FL'],backgroundColor:'rgba(57,255,20,.1)',pointRadius:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'velocity m/s',color:'#444',font:{size:8}},ticks:{color:'#444',font:{size:8,family:'Space Mono'},maxTicksLimit:6},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},y:{title:{display:true,text:'force N',color:'#444',font:{size:8}},ticks:{color:'#444',font:{size:8,family:'Space Mono'},maxTicksLimit:5},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}}}});
+}
+
+// ─── SENSOR TILES UI ─────────────────────────────────────────────────────────
+function buildSensorTiles(){
+  const cRoles=cornerRoles();
+  const tilesEl=document.getElementById('sensor-tiles');
+  let gridClass='sg-2';
+  if(cRoles.length===4)gridClass='sg-2';
+  else if(cRoles.length===2)gridClass='sg-2';
+  tilesEl.innerHTML=`<div class="sensor-grid ${gridClass}" id="corner-tile-grid">${cRoles.map(r=>`
+    <div class="stile" id="tile-${r}" style="--sc:${ROLE_COLORS[r]}">
+      <div class="st-header">
+        <span class="st-role">${r}</span>
+        <span class="st-status ss-sim" id="st-${r}">SIM</span>
+      </div>
+      <div class="st-val" id="sv-${r}">0.00</div>
+      <div class="st-unit">g</div>
+    </div>`).join('')}</div>`;
+  // CG tile
+  const cgEl=document.getElementById('cg-tile-wrap');
+  cgEl.innerHTML=`<div class="cg-wide" id="tile-CG">
+    <div class="cg-top">
+      <div><div class="cg-role">CG CHASSIS</div><div style="font-size:9px;color:var(--muted);margin-top:2px">body motion</div></div>
+      <span class="st-status ss-sim" id="st-CG">SIM</span>
+    </div>
+    <div class="cg-vals">
+      <div class="cg-col"><div class="cg-v" id="sv-CG-x">0.00</div><div class="cg-l">X g</div></div>
+      <div class="cg-col"><div class="cg-v" id="sv-CG-y">0.00</div><div class="cg-l">Y g</div></div>
+      <div class="cg-col"><div class="cg-v" id="sv-CG-z">0.00</div><div class="cg-l">Z g</div></div>
+    </div></div>`;
+  // Legend
+  const legEl=document.getElementById('live-legend');
+  legEl.innerHTML=roles().map(r=>`<span class="li"><span class="${IS_CG(r)?'ll':'ld'}" style="background:${ROLE_COLORS[r]}"></span>${r}</span>`).join('');
+}
+
+// ─── WATCHDOG + POLLING ──────────────────────────────────────────────────────
+const WATCHDOG_MS = () => (1000/(cfg.hz||500))*3;
+let pollIntervals = {};
+
+function startPolling(){
+  stopPolling();
+  roles().forEach(r=>{
+    const ip = (cfg.ips||{})[r];
+    if(!ip){ channels[r]={...channels[r],status:'sim'}; return; }
+    channels[r]={...channels[r],status:'live',lastSeen:Date.now()};
+    pollIntervals[r]=setInterval(async()=>{
+      try{
+        const resp=await fetch(`http://${ip}${cfg.endpoint||'/data'}`,{signal:AbortSignal.timeout(800)});
+        const data=await resp.json();
+        const val=parseEVBData(data,r);
+        if(val!==null){channels[r].val=val;channels[r].lastSeen=Date.now();channels[r].status='live';}
+      }catch{
+        const age=Date.now()-channels[r].lastSeen;
+        channels[r].status=age>WATCHDOG_MS()*5?'offline':age>WATCHDOG_MS()?'weak':'live';
+      }
+    },1000/(cfg.hz||500));
+  });
+}
+function stopPolling(){ Object.values(pollIntervals).forEach(clearInterval); pollIntervals={}; }
+
+// ─── EVB API PARSER ──────────────────────────────────────────────────────────
+// TODO: Replace field names once you paste the actual EVB JSON response here
+// Common patterns to try: accel_z, AccZ, az, acceleration.z, data.z
+function parseEVBData(json, role){
+  // Try common field patterns
+  const z = json.accel_z ?? json.AccZ ?? json.az ?? json.acceleration?.z ?? json.z ?? json.data?.accel_z ?? null;
+  if(z !== null) return parseFloat(z);
+  // Fallback: return first numeric value found
+  const vals = Object.values(json).filter(v=>typeof v==='number');
+  return vals.length ? vals[0] : null;
+}
+
+// ─── MAIN TICK ───────────────────────────────────────────────────────────────
+let tickInterval = null;
+function startTick(){
+  if(tickInterval)clearInterval(tickInterval);
+  const dt=1/(cfg.hz||500);
+  tickInterval=setInterval(()=>{
+    roles().forEach((r,i)=>{
+      // Advance sim for sim-mode channels
+      if(channels[r]?.status==='sim') simTick(r,Math.min(dt,.1));
+      // Update live tiles
+      if(r==='CG'){
+        // Simulated: decompose CG into x/y/z
+        const v=channels[r]?.val||0;
+        const cx=document.getElementById('sv-CG-x'),cy=document.getElementById('sv-CG-y'),cz=document.getElementById('sv-CG-z');
+        if(cx)cx.textContent=(v*.4+(Math.random()-.5)*.02).toFixed(2);
+        if(cy)cy.textContent=(v*.2+(Math.random()-.5)*.02).toFixed(2);
+        if(cz)cz.textContent=v.toFixed(2);
+      } else {
+        const el=document.getElementById('sv-'+r);
+        if(el)el.textContent=(channels[r]?.val||0).toFixed(2);
+      }
+      // Update status badge
+      const stEl=document.getElementById('st-'+r);
+      if(stEl){
+        const st=channels[r]?.status||'sim';
+        stEl.className='st-status ss-'+st;
+        stEl.textContent=st.toUpperCase();
+      }
+      // Offline tile dimming
+      const tileEl=document.getElementById('tile-'+r);
+      if(tileEl){tileEl.classList.toggle('offline',channels[r]?.status==='offline');tileEl.classList.toggle('live',channels[r]?.status!=='offline');}
+      // Live chart
+      if(liveChart&&liveBufs[r]){
+        liveBufs[r].push(channels[r]?.val||0);liveBufs[r].shift();
+        liveChart.data.datasets[i].data=[...liveBufs[r]];
+      }
+      // Record
+      if(recording&&!calibrating){
+        if(!smpBufs[r])smpBufs[r]=[];
+        smpBufs[r].push(channels[r]?.val||0);
+      }
+    });
+    if(liveChart)liveChart.update('none');
+    if(recording&&!calibrating){
+      const n=(smpBufs[cornerRoles()[0]]||[]).length;
+      document.getElementById('sess-smp').textContent=n+' SMP';
+    }
+  },Math.max(20,1000/(cfg.hz||500)));
+}
+
+// ─── RECORDING ───────────────────────────────────────────────────────────────
+function toggleRec(){
+  recording=!recording;
+  const btn=document.getElementById('rec-btn'),dot=document.getElementById('sdot');
+  if(recording){
+    smpBufs={};calibrating=true;
+    document.getElementById('sess-st').innerHTML='<span class="calib">BASELINE…</span>';
+    btn.textContent='■ STOP SESSION';btn.classList.add('recording');dot.className='sdot sd-rec';
+    sessionStart=Date.now();
+    timerInt=setInterval(()=>{const s=~~((Date.now()-sessionStart)/1e3);document.getElementById('sess-time').textContent=`${String(~~(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;},1000);
+    setTimeout(()=>{calibrating=false;document.getElementById('sess-st').textContent='REC';},3000);
+  } else {
+    clearInterval(timerInt);btn.textContent='● START SESSION';btn.classList.remove('recording');dot.className='sdot sd-live';
+    document.getElementById('sess-st').textContent='PROCESSING…';
+    setTimeout(()=>{ processSession(); document.getElementById('sess-st').textContent='COMPLETE'; },80);
+  }
+}
+
+// ─── SESSION PROCESSING ──────────────────────────────────────────────────────
+function processSession(){
+  // Convert smpBufs to Float32Arrays
+  smp={};
+  roles().forEach(r=>{ if(smpBufs[r]&&smpBufs[r].length>50)smp[r]=new Float32Array(smpBufs[r]); });
+  const n=Math.max(...Object.values(smp).map(a=>a.length));
+  if(n<50)return;
+  const dt=1/(cfg.hz||500);
+  const cgArr=smp['CG']||null;
+  const cgZ=cgArr||new Float32Array(n).fill(0);
+  sdata={channels:{},axle:{},dt,mode,availableRoles:Object.keys(smp)};
+
+  cornerRoles().forEach(r=>{
+    if(!smp[r])return;
+    const arr=smp[r],mrV=getMR(r),msV=getSprungMass(r),fnV=getNatFreq(r),ccV=getCritDamp(r);
+    const rel=arr.map((v,i)=>v-(cgZ[i]||0));
+    const relV=intV(rel,dt);
+    const relD=intD(rel,dt);
+    const wV=mrV?Array.from(relV).map(v=>v/mrV):Array.from(relV);
+    const lshs=T().lsHsWhl;
+    const base=zetaLD(arr)||.7;
+    const zLSC=zetaLD(Array.from(arr).filter((_,i)=>arr[i]<0&&Math.abs(wV[i])<lshs))||base;
+    const zHSC=zetaLD(Array.from(arr).filter((_,i)=>arr[i]<0&&Math.abs(wV[i])>=lshs))||base;
+    const zLSR=zetaLD(Array.from(arr).filter((_,i)=>arr[i]>0&&Math.abs(wV[i])<lshs))||base*1.1;
+    const zHSR=zetaLD(Array.from(arr).filter((_,i)=>arr[i]>0&&Math.abs(wV[i])>=lshs))||zLSR;
+    const hop=domF(Array.from(rel),cfg.hz||500,T().hopFreq[0]*.5,T().hopFreq[1]*2);
+    const fvD=(msV&&mrV&&cgArr)?extFV(Array.from(arr),Array.from(cgArr),msV,mrV,dt):null;
+    const dStep=Math.max(1,~~(relD.length/500));
+    const dispDS=Array.from({length:~~(relD.length/dStep)},(_,i)=>relD[i*dStep]);
+    sdata.channels[r]={arr:Array.from(arr),dispDS,wV,mrV,msV,fnV,ccV,zLSC,zHSC,zLSR,zHSR,hop,fvD};
+  });
+
+  // Axle-level
+  const bF=cgArr?domF(Array.from(cgArr),cfg.hz||500,T().bodyFreq[0]*.5,T().bodyFreq[1]*2):null;
+  const frontRoles=cornerRoles().filter(r=>IS_FRONT(r));
+  const rearRoles =cornerRoles().filter(r=>IS_REAR(r));
+  const avgHop=rs=>rs.filter(r=>sdata.channels[r]?.hop).reduce((s,r)=>s+sdata.channels[r].hop,0)/Math.max(1,rs.filter(r=>sdata.channels[r]?.hop).length)||null;
+  sdata.axle={
+    bF,
+    fHop:avgHop(frontRoles)||null,
+    rHop:avgHop(rearRoles)||null,
+    fFn:getNatFreq(frontRoles[0]||'FL'),
+    rFn:getNatFreq(rearRoles[0]||'RL'),
+    fWR:getWheelRate(frontRoles[0]||'FL'),
+    rWR:getWheelRate(rearRoles[0]||'RL'),
+    hasCGData:!!cgArr
+  };
+
+  buildAnalysisCharts();
+  updateCapabilityPanel();
+  updateAnalysisUI();
+  populateDisp();
+  const firstCorner=cornerRoles().find(r=>sdata.channels[r]);
+  if(firstCorner)selFV(firstCorner,null);
+}
+
+// ─── CAPABILITY PANEL ─────────────────────────────────────────────────────────
+function cap(ok,warn,txt){ return `<div class="cap-item"><div class="cap-dot ${ok?'cap-ok':warn?'cap-warn':'cap-no'}"></div><span class="cap-txt ${ok?'ok':''}">${txt}</span></div>`; }
+function updateCapabilityPanel(){
+  const available=sdata?Object.keys(sdata.channels):[];
+  const hasCGD=sdata?.axle?.hasCGData;
+  const hasCorner=available.length>0;
+  const hasFront=available.some(r=>IS_FRONT(r));
+  const hasRear=available.some(r=>IS_REAR(r));
+  const hasBothAxles=hasFront&&hasRear;
+  const hasMass=hasCW();
+  document.getElementById('cap-grid').innerHTML=[
+    cap(hasCorner,false,'corner accel signal'),
+    cap(hasCGD,false,'relative displacement'),
+    cap(hasFront&&sdata?.channels[cornerRoles().find(r=>IS_FRONT(r))]?.fvD,'no','F-V curve extraction'),
+    cap(sdata?.axle?.fFn||sdata?.axle?.bF,false,'natural frequency'),
+    cap(hasCorner,'','damping ratio ζ'),
+    cap(hasBothAxles,!hasBothAxles,'front/rear balance'),
+    cap(hasMass,'','exact zeta (needs mass)'),
+    cap(hasCGD&&hasMass,'','critical damping coeff'),
+  ].join('');
+}
+
+// ─── ANALYSIS UI ─────────────────────────────────────────────────────────────
+const S=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+const SB=(id,cls,txt)=>{const e=document.getElementById(id);if(e){e.className='badge '+cls;e.textContent=txt;}};
+const fBadge=(hz,lo,hi)=>!hz?{c:'b-info',t:'NO DATA'}:hz<lo?{c:'b-warn',t:'UNDER-SPRUNG'}:hz>hi?{c:'b-bad',t:'OVER-SPRUNG'}:{c:'b-ok',t:'IN RANGE ✓'};
+const hBadge=(hz,lo,hi)=>!hz?{c:'b-info',t:'NO DATA'}:hz<lo?{c:'b-warn',t:'LOW'}:hz>hi?{c:'b-warn',t:'HIGH'}:{c:'b-ok',t:'NORMAL ✓'};
+const zCol=z=>!z?'#555':z<.5?'#ff2d55':z>.9?'#ffd600':'#39ff14';
+
+function makeAxleGrid(elId,frontVal,rearVal,frontLabel,rearLabel,sub,fBadgeObj,rBadgeObj,frontColor,rearColor){
+  const el=document.getElementById(elId);if(!el)return;
+  el.innerHTML=`
+    <div class="ac" data-ax="${frontLabel}"><div class="ac-lbl">PRIMARY</div><div class="ac-val" style="color:${frontColor}">${frontVal}</div><div class="ac-sub">${sub}</div><div class="badge ${fBadgeObj.c}">${fBadgeObj.t}</div></div>
+    <div class="ac" data-ax="${rearLabel}"><div class="ac-lbl">REAR</div><div class="ac-val" style="color:${rearColor}">${rearVal}</div><div class="ac-sub">${sub}</div><div class="badge ${rBadgeObj.c}">${rBadgeObj.t}</div></div>`;
+}
+
+function updateAnalysisUI(){
+  if(!sdata)return;
+  document.getElementById('no-data-warn').style.display='none';
+  const ax=sdata.axle,t2=tier(),tgt=T();
+  const fF=ax.fFn||ax.bF,rF=ax.rFn||ax.bF;
+  // Freq panels
+  makeAxleGrid('freq-axle-grid',fF?fF.toFixed(2)+' Hz':'—',rF?rF.toFixed(2)+' Hz':'—',
+    'FRONT','REAR','Hz · target '+tgt.bodyFreq[0]+'–'+tgt.bodyFreq[1],
+    fBadge(fF,...tgt.bodyFreq),fBadge(rF,...tgt.bodyFreq),ROLE_COLORS[IS_FRONT('FORK')?'FORK':'FL'],ROLE_COLORS[IS_REAR('REAR')?'REAR':'RL']);
+  makeAxleGrid('hop-axle-grid',ax.fHop?ax.fHop.toFixed(1)+' Hz':'—',ax.rHop?ax.rHop.toFixed(1)+' Hz':'—',
+    'FRONT','REAR','Hz · target '+tgt.hopFreq[0]+'–'+tgt.hopFreq[1],
+    hBadge(ax.fHop,...tgt.hopFreq),hBadge(ax.rHop,...tgt.hopFreq),'#fff','#fff');
+  // Spring
+  S('sa-fwr',ax.fWR?ax.fWR.toFixed(1)+' N/mm':t2<1?'SET MR':'—');
+  S('sa-rwr',ax.rWR?ax.rWR.toFixed(1)+' N/mm':t2<1?'SET MR':'—');
+  if(fF&&rF){const r=fF/rF;S('sa-ratio',r.toFixed(2));const e=document.getElementById('sa-ratio');e.className='dr-v'+(r<.85||r>1.15?' dy':'');S('sa-bal',r<.85?'PUSH (FRONT SOFTER)':r>1.15?'LOOSE (REAR SOFTER)':'BALANCED ✓');}
+  const spDx=f=>!f?'—':f<tgt.bodyFreq[0]?'UNDER-SPRUNG':f>tgt.bodyFreq[1]?'OVER-SPRUNG':f<tgt.bodyFreq[0]+.5?'SOFT':'GOOD ✓';
+  S('sa-fsp',spDx(fF));S('sa-rsp',spDx(rF));
+  // Damping table
+  const tb=document.getElementById('damp-tbody');
+  tb.innerHTML=cornerRoles().filter(r=>sdata.channels[r]).map(r=>{
+    const d=sdata.channels[r];const col=ROLE_COLORS[r];
+    const zc=z=>!z?'<td style="color:#333">—</td>':`<td><div class="zw"><div class="zt"><div class="zf" style="width:${Math.min(100,~~((z/1.2)*100))}%;background:${zCol(z)}"></div></div><span class="zn" style="color:${zCol(z)}">${z.toFixed(2)}</span></div></td>`;
+    return`<tr><td style="font-size:10px;font-weight:700;color:${col}">${r}</td>${zc(d.zLSC)}${zc(d.zHSC)}${zc(d.zLSR)}${zc(d.zHSR)}</tr>`;
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:#333;padding:12px;font-size:9px">NO CORNER DATA</td></tr>';
+  // Critical damping
+  const ccCard=document.getElementById('cc-card');
+  ccCard.innerHTML=cornerRoles().map(r=>`<div class="dr"><span class="dr-l">${r} c_critical</span><span class="dr-v">${getCritDamp(r)?(getCritDamp(r)/1000).toFixed(2)+' kNs/m':t2<2?'ADD WEIGHTS':'—'}</span></div>`).join('');
+  // FV tabs
+  const ftabs=document.getElementById('fv-tabs');
+  ftabs.innerHTML=cornerRoles().filter(r=>sdata.channels[r]).map(r=>`<button class="fvt" style="--sc:${ROLE_COLORS[r]}" onclick="selFV('${r}',this)">${r}</button>`).join('');
+  // Diagnosis
+  const diag=document.getElementById('diag-card');let h='';
+  cornerRoles().filter(r=>sdata.channels[r]).forEach(r=>{
+    const d=sdata.channels[r],col=ROLE_COLORS[r],issues=[];
+    if(d.zLSC&&d.zLSC<.5)issues.push({l:'LS COMP',t:'underdamped — excessive movement on slow inputs',b:'b-bad'});
+    if(d.zLSC&&d.zLSC>.9)issues.push({l:'LS COMP',t:'overdamped — harsh on slow inputs',b:'b-warn'});
+    if(d.zHSC&&d.zHSC<.4)issues.push({l:'HS COMP',t:'underdamped — bottoming risk, poor bump absorption',b:'b-bad'});
+    if(d.zLSR&&d.zLSR<.55)issues.push({l:'LS RBD',t:'underdamped — packing risk on successive inputs',b:'b-bad'});
+    if(d.zLSR&&d.zLSR>1.0)issues.push({l:'LS RBD',t:'overdamped — slow recovery',b:'b-warn'});
+    if(d.zHSR&&d.zHSR<.45)issues.push({l:'HS RBD',t:'underdamped — wheel hop after large impacts',b:'b-bad'});
+    if(!issues.length)h+=`<div class="dr"><span style="font-size:11px;font-weight:700;color:${col}">${r}</span><span class="badge b-ok">GOOD ✓</span></div>`;
+    else issues.forEach(i=>h+=`<div class="diag-row"><div style="display:flex;gap:8px;align-items:center;margin-bottom:3px"><span style="font-size:10px;font-weight:700;color:${col}">${r}</span><span style="font-size:8px;color:#555;letter-spacing:.06em">${i.l}</span><span class="badge ${i.b}">${i.b==='b-bad'?'UNDERDAMPED':'OVERDAMPED'}</span></div><div style="font-size:10px;color:#555;line-height:1.5">${i.t}</div></div>`);
+  });
+  if(!h)h='<div class="empty">NO CORNER DATA RECORDED</div>';
+  diag.innerHTML=h;
+  // Show/hide sections based on available data
+  const hasAny=cornerRoles().some(r=>sdata.channels[r]);
+  ['damp-section','fv-section','diag-section'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display=hasAny?'block':'none'; });
+  ['disp-section'].forEach(id=>{ const e=document.getElementById(id);if(e)e.style.display=sdata.axle.hasCGData?'block':'none'; });
+}
+
+function populateDisp(){
+  if(!sdata||!dispChart)return;
+  cornerRoles().filter((r,i)=>sdata.channels[r]&&dispChart.data.datasets[i]).forEach((r,i)=>{
+    const d=sdata.channels[r].dispDS;
+    dispChart.data.datasets[i].data=d;
+    if(!dispChart.data.labels.length)dispChart.data.labels=Array.from({length:d.length},(_,k)=>k);
+  });
+  dispChart.update();
+  // Displacement legend
+  const legEl=document.getElementById('disp-legend');
+  legEl.innerHTML=cornerRoles().filter(r=>sdata.channels[r]).map(r=>`<span class="li"><span class="ld" style="background:${ROLE_COLORS[r]}"></span>${r} mm</span>`).join('');
+}
+
+let selFVRole=null;
+function selFV(r,btn){
+  selFVRole=r;
+  document.querySelectorAll('.fvt').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  else{const b=document.querySelector(`.fvt`);if(b)b.classList.add('on');}
+  const lbl=document.getElementById('fv-lbl');if(lbl){lbl.textContent=r;lbl.style.color=ROLE_COLORS[r];}
+  if(!sdata||!fvChart)return;
+  const d=sdata.channels[r];
+  if(!d?.fvD){fvChart.data.datasets[0].data=[];fvChart.update();['lsc','hsc','lsr','hsr','knee'].forEach(k=>S('fv-'+k,'—'));return;}
+  fvChart.data.datasets[0].data=d.fvD.pts;
+  fvChart.data.datasets[0].borderColor=ROLE_COLORS[r];
+  fvChart.data.datasets[0].backgroundColor=ROLE_COLORS[r]+'18';
+  fvChart.update();
+  const ss=s=>s?s.toFixed(0)+' N·s/m':'—';
+  S('fv-lsc',ss(d.fvD.lsc));S('fv-hsc',ss(d.fvD.hsc));S('fv-lsr',ss(d.fvD.lsr));S('fv-hsr',ss(d.fvD.hsr));S('fv-knee',d.fvD.k.toFixed(2)+' m/s');
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');btn.classList.add('on');
+  if(id==='analysis'){updateCapabilityPanel();if(sdata&&selFVRole)populateFV();}
+}
+function populateFV(){ if(selFVRole)selFV(selFVRole,null); }
+
+// ─── SETUP MODAL ─────────────────────────────────────────────────────────────
+function setMode(m,btn){
+  mode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  buildIPRows();buildCWInputs();buildSpringInputs();
+}
+
+function buildIPRows(){
+  const el=document.getElementById('ip-rows');
+  el.innerHTML=roles().map(r=>{
+    const ip=(cfg.ips||{})[r]||'';
+    const col=ROLE_COLORS[r];
+    return`<div class="ip-row">
+      <span class="ip-role-badge" style="border:1px solid ${col};color:${col};background:${col}15">${r}</span>
+      <div class="ip-status-dot" style="background:${ip?'var(--G)':'var(--dim)'}"></div>
+      <input class="ip-input" placeholder="192.168.4.1 (blank=sim)" value="${ip}" oninput="cfg.ips['${r}']=this.value;this.previousElementSibling.style.background=this.value?'var(--G)':'var(--dim)'"/>
+      ${!ip?'<span class="ip-sim-badge">SIM</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function buildCWInputs(){
+  const el=document.getElementById('cw-inputs');
+  const fields=mode==='4W'
+    ?[{k:'cfl',l:'FL',c:ROLE_COLORS.FL},{k:'cfr',l:'FR',c:ROLE_COLORS.FR},{k:'crl',l:'RL',c:ROLE_COLORS.RL},{k:'crr',l:'RR',c:ROLE_COLORS.RR}]
+    :[{k:'cfork',l:'FORK',c:ROLE_COLORS.FORK},{k:'crear',l:'REAR',c:ROLE_COLORS.REAR}];
+  el.innerHTML=fields.map(f=>`<div class="fg" style="margin:0"><label class="fl2" style="color:${f.c}">${f.l}</label><input class="fi" id="s-${f.k}" value="${cfg[f.k]||''}" placeholder="kg" oninput="cfg['${f.k}']=this.value;livePreview()"/></div>`).join('');
+}
+
+function buildSpringInputs(){
+  const el=document.getElementById('spring-inputs');
+  const fl=mode==='4W'?'FRONT':'FORK',rl=mode==='4W'?'REAR':'REAR';
+  el.innerHTML=`<div class="fr2">
+    <div class="fg"><label class="fl2">spring ${fl} N/mm</label><input class="fi" id="s-sf" value="${cfg.sf||''}" placeholder="e.g. 80" oninput="cfg.sf=this.value;livePreview()"/></div>
+    <div class="fg"><label class="fl2">spring ${rl} N/mm</label><input class="fi" id="s-sr" value="${cfg.sr||''}" placeholder="e.g. 60" oninput="cfg.sr=this.value;livePreview()"/></div>
+  </div>
+  <div class="fr2">
+    <div class="fg"><label class="fl2">motion ratio ${fl}</label><input class="fi" id="s-mrf" value="${cfg.mrf||''}" placeholder="e.g. 0.70" oninput="cfg.mrf=this.value;livePreview()"/></div>
+    <div class="fg"><label class="fl2">motion ratio ${rl}</label><input class="fi" id="s-mrr" value="${cfg.mrr||''}" placeholder="e.g. 0.65" oninput="cfg.mrr=this.value;livePreview()"/></div>
+  </div>`;
+}
+
+function openSetup(){
+  const st=localStorage.getItem(SK);if(st){try{const s=JSON.parse(st);Object.assign(cfg,s);if(s.mode)mode=s.mode;}catch{}}
+  document.getElementById('s-name').value=cfg.name||'';
+  document.getElementById('s-hz').value=cfg.hz||500;
+  document.getElementById('s-endpoint').value=cfg.endpoint||'/data';
+  document.getElementById('s-uns').value=cfg.uns||'';
+  document.getElementById('s-key').value=apiKey();
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('on'));
+  const mb=document.getElementById('mb-'+mode.toLowerCase());if(mb)mb.classList.add('on');
+  buildIPRows();buildCWInputs();buildSpringInputs();
+  document.getElementById('setup-modal').style.display='flex';
+  livePreview();
+}
+function closeSetup(){document.getElementById('setup-modal').style.display='none';}
+function saveSetup(){
+  cfg.name=document.getElementById('s-name').value;
+  cfg.hz=parseInt(document.getElementById('s-hz').value)||500;
+  cfg.endpoint=document.getElementById('s-endpoint').value||'/data';
+  cfg.uns=document.getElementById('s-uns').value;
+  cfg.mode=mode;
+  localStorage.setItem(SK,JSON.stringify(cfg));
+  const k=document.getElementById('s-key').value.trim();if(k)localStorage.setItem(AK,k);
+  updatePills();
+  // Restart with new config
+  initSimStates();
+  buildSensorTiles();
+  buildLiveChart();
+  stopPolling();
+  if(Object.values(cfg.ips||{}).some(v=>v))startPolling();
+  closeSetup();
+}
+
+function livePreview(){
+  // Weight preview
+  let tot=0,fp='—';
+  if(mode==='4W'){
+    const vs=['s-cfl','s-cfr','s-crl','s-crr'].map(id=>parseFloat(document.getElementById(id)?.value));
+    if(vs.every(v=>!isNaN(v)&&v>0)){const[fl,fr,rl,rr]=vs;tot=fl+fr+rl+rr;fp=((fl+fr)/tot*100).toFixed(1)+'%';}
+  } else {
+    const vs=['s-cfork','s-crear'].map(id=>parseFloat(document.getElementById(id)?.value));
+    if(vs.every(v=>!isNaN(v)&&v>0)){tot=vs[0]+vs[1];fp=(vs[0]/tot*100).toFixed(1)+'%';}
+  }
+  const wp=document.getElementById('wt-prev');
+  if(tot>0){wp.style.display='block';S('p-tot',tot.toFixed(0)+' kg');S('p-fp',fp);}
+  else wp.style.display='none';
+  // Spring preview
+  const sf=parseFloat(cfg.sf),sr=parseFloat(cfg.sr),mrf=parseFloat(cfg.mrf),mrr=parseFloat(cfg.mrr);
+  const sp=document.getElementById('sp-prev');
+  if([sf,sr,mrf,mrr].every(v=>!isNaN(v)&&v>0)){
+    sp.style.display='block';
+    const fwr=sf*mrf*mrf,rwr=sr*mrr*mrr;S('p-fwr',fwr.toFixed(1)+' N/mm');S('p-rwr',rwr.toFixed(1)+' N/mm');
+    const u=parseFloat(cfg.uns)||(mode==='4W'?18:6);
+    // Estimate natural freq if weights present
+    const fwt=mode==='4W'?(parseFloat(cfg.cfl)||0+parseFloat(cfg.cfr)||0)/2:parseFloat(cfg.cfork)||0;
+    const rwt=mode==='4W'?(parseFloat(cfg.crl)||0+parseFloat(cfg.crr)||0)/2:parseFloat(cfg.crear)||0;
+    S('p-ffn',fwt>0?Math.sqrt(fwr*1000/Math.max(1,fwt-u))/TP>0?(Math.sqrt(fwr*1000/Math.max(1,fwt-u))/TP).toFixed(2)+' Hz':'—':'ADD WEIGHTS');
+    S('p-rfn',rwt>0?(Math.sqrt(rwr*1000/Math.max(1,rwt-u))/TP).toFixed(2)+' Hz':'ADD WEIGHTS');
+  } else sp.style.display='none';
+}
+
+function updatePills(){
+  document.getElementById('mode-pill').textContent=mode;
+  const p=document.getElementById('tier-pill'),t=tier();
+  p.className='tier-pill '+['tp-0','tp-1','tp-2'][t];
+  p.textContent=['NO SETUP','MR ONLY','FULL SPEC'][t];
+}
+
+// ─── AI CHAT ─────────────────────────────────────────────────────────────────
+function buildSys(){
+  const t=tier(),tgt=T();
+  const available=sdata?Object.keys(sdata.channels):[];
+  const td=['No setup — qualitative only','MR set — absolute frequencies','Full spec — corner mass, zeta, F-V'][t];
+  let ctx=`Mode: ${mode} | Available sensors: ${available.length>0?available.join(', '):'none recorded yet'}\n`;
+  if(sdata){
+    const ax=sdata.axle;
+    ctx+=`Body freq: F ${ax.fFn?ax.fFn.toFixed(2):'?'} R ${ax.rFn?ax.rFn.toFixed(2):'?'} Hz (target ${tgt.bodyFreq.join('-')} Hz)\n`;
+    ctx+=`Hop freq: F ${ax.fHop?ax.fHop.toFixed(1):'?'} R ${ax.rHop?ax.rHop.toFixed(1):'?'} Hz (target ${tgt.hopFreq.join('-')} Hz)\n`;
+    ctx+=`Wheel rates: F ${ax.fWR?ax.fWR.toFixed(1):'?'} R ${ax.rWR?ax.rWR.toFixed(1):'?'} N/mm | CG data: ${ax.hasCGData?'yes':'no'}\n`;
+    ctx+=`Zeta: ${available.map(r=>`${r} LSC=${sdata.channels[r].zLSC?.toFixed(3)||'?'} HSC=${sdata.channels[r].zHSC?.toFixed(3)||'?'} LSR=${sdata.channels[r].zLSR?.toFixed(3)||'?'} HSR=${sdata.channels[r].zHSR?.toFixed(3)||'?'}`).join(' | ')}\n`;
+    ctx+=`FV slopes: ${available.map(r=>{const fv=sdata.channels[r].fvD;return fv?`${r} LSC=${fv.lsc?.toFixed(0)||'?'} HSC=${fv.hsc?.toFixed(0)||'?'} N·s/m`:''}).filter(Boolean).join(' | ')}\n`;
+  }
+  return`Expert motorsport suspension engineer. ${mode} vehicle. Tier ${t}/2: ${td}.
+Physics targets for ${mode}: body ${tgt.bodyFreq[0]}–${tgt.bodyFreq[1]} Hz, hop ${tgt.hopFreq[0]}–${tgt.hopFreq[1]} Hz, LS/HS crossover ${tgt.lsHsWhl} mm/s wheel. ζ=0.707 optimal. c_crit=2√(k_wheel·m_sprung).
+Vehicle: ${cfg.name||'unknown'} | Springs F ${cfg.sf||'?'} R ${cfg.sr||'?'} N/mm | MR F ${cfg.mrf||'?'} R ${cfg.mrr||'?'}
+Weights: ${cornerRoles().map(r=>`${r}=${getWeight(r)||'?'}kg`).join(' ')}
+${ctx}
+Note if only 1 sensor is available — limit analysis to what that sensor can provide. Be direct and specific.${!sdata?.axle?.hasCGData?' Note: no CG sensor data — relative displacement and F-V curves are not available, zeta is self-referenced estimate.':''}`;
+}
+
+function addMsg(role,html){const m=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='msg msg-'+role;const t=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});d.innerHTML=`<div class="mb">${html}</div><div class="mm">${role==='ai'?'DAMPER TUNE AI':'YOU'} · ${t}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;return d;}
+
+async function sendChat(){
+  const ta=document.getElementById('chat-input'),txt=ta.value.trim();if(!txt)return;
+  ta.value='';ta.style.height='36px';document.getElementById('chat-send').disabled=true;
+  addMsg('user',txt.replace(/</g,'&lt;'));chatHist.push({role:'user',content:txt});
+  const typing=addMsg('ai','<span class="td"></span><span class="td"></span><span class="td"></span>');
+  const key=apiKey();
+  if(!key){typing.querySelector('.mb').textContent='NO API KEY — ADD IN ⚙ SETUP.';document.getElementById('chat-send').disabled=false;return;}
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:buildSys(),messages:chatHist.slice(-14)})});
+    const data=await r.json();
+    const reply=data.error?`API ERROR: ${data.error.message}`:data.content.filter(b=>b.type==='text').map(b=>b.text).join('');
+    typing.querySelector('.mb').innerHTML=reply.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong style="color:#39ff14">$1</strong>');
+    typing.querySelector('.mm').textContent=`DAMPER TUNE AI · ${new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}`;
+    if(!data.error)chatHist.push({role:'assistant',content:reply});
+  }catch{typing.querySelector('.mb').textContent='NETWORK ERROR.';}
+  document.getElementById('chat-send').disabled=false;
+  document.getElementById('chat-msgs').scrollTop=9999;
+}
+function sendChip(el){document.getElementById('chat-input').value=el.textContent;sendChat();}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+(function init(){
+  const st=localStorage.getItem(SK);
+  if(st){try{const s=JSON.parse(st);Object.assign(cfg,s);if(s.mode)mode=s.mode;}catch{}}
+  cfg.hz=parseInt(cfg.hz)||500;
+  if(!cfg.ips)cfg.ips={};
+  initSimStates();
+  buildSensorTiles();
+  buildLiveChart();
+  updateCapabilityPanel();
+  updatePills();
+  startTick();
+  if(Object.values(cfg.ips).some(v=>v))startPolling();
+})();
+</script>
+</body>
+</html>
